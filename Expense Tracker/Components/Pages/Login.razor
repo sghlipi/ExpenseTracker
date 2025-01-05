@@ -1,0 +1,69 @@
+@page "/login"
+@using Expense_Tracker.Model
+@using Expense_Tracker.Services
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@inject LoginStateService LoginStateService
+
+<div class="container">
+    <div class="card w-300">
+        <div class="card-body">
+            <form>
+                <h3 class="text-center mb-4">Sign In</h3>
+                <div class="mb-4">
+                    <label for="name" style="color: white">Name:</label>
+                    <input id="name" class="w-100" type="text" @bind="loginUser.Name" />
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" style="color: white">Password:</label>
+                    <input id="password" class="w-100" type="password" @bind="loginUser.Password" />
+                </div>
+                <p class="text-center" style="color: white">Forgot Password?</p>
+                <button type="button" class="btn btn-primary w-100" @onclick="SignIn">Sign In</button>
+                <p class="error-message">@errorMessage</p>
+            </form>
+           
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="error-message">@errorMessage</p>
+}
+
+@code {
+    private User loginUser = new User();
+    private string errorMessage;
+
+    private async Task SignIn()
+    {
+        // Ensure all fields are filled
+        if (string.IsNullOrWhiteSpace(loginUser.Name) || string.IsNullOrWhiteSpace(loginUser.Password))
+        {
+            errorMessage = "All fields are required.";
+            return;
+        }
+
+        // try
+        // {
+        // Fetch the user from the UserService
+        var user = await UserService.GetUser(loginUser.Name);
+
+        // Validate the user
+        if (user != null && user.Password == loginUser.Password) // Replace this with a hashed password comparison
+        {
+            // Set the authenticated user
+            LoginStateService.SetAuthenticatedUser(user);
+
+            // Navigate to the dashboard
+            NavigationManager.NavigateTo("/dashboard");
+        }
+        else
+        {
+            errorMessage = "Invalid name or password. Please try again.";
+        }
+    }
+
+}

@@ -1,0 +1,61 @@
+
+button {
+    background-color: #8E8E93;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color:black;
+}
+
+.error-message {
+    color: red;
+}
+
+form {
+    background-color: #273240;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    align-items: center;
+
+}
+
+body {
+    font-family:Poppins;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+.input{
+    border-radius:5px;
+    color:white;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    /*color: white;*/
+}
+
+h3 {
+    color: white;
+    text-align: center; 
+}
+
+.db-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.db-header {
+    display: flex;
+    justify-content: space-between;
+}

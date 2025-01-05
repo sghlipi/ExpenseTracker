@@ -1,0 +1,75 @@
+@page "/"
+@using Expense_Tracker.Model
+@using Expense_Tracker.Services
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+
+<div class="container">
+    <div class="card w-300">
+        <div class="card-body">
+            
+            <form @onsubmit="SignUp">
+                <h3 class="text-center mb-4">Create Account</h3>
+                <div class="mb-4">
+                    <label style="color: white">Name:</label>
+                    <input class="w-100" type="text" @bind="newUser.Name"/>
+                </div>
+
+                <div class="mb-4">
+                    <label style="color: white">Password:</label>
+                    <input class="w-100" type="password" @bind="newUser.Password"/>
+                </div>
+
+                <div class="mb-4">
+                    <label style="color: white">Currency Type:</label>
+                    <select id="CurrencyType" name="CurrencyType" @bind="newUser.CurrencyType" required>
+                        <option class="w-100" value="USD">USD</option>
+                        <option class="w-100" value="EUR">EUR</option>
+                        <option class="w-100" value="INR">INR</option>
+                        <option class="w-100" value="NPR">NPR</option>
+                    </select>
+                </div>
+
+
+                <button type="submit" class="w-100" @onclick="SignUp">Sign Up</button>
+                <p class="error-message">@errorMessage</p>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private User newUser = new User();
+    private string errorMessage;
+
+    private async Task SignUp()
+    {
+            // Validate user details
+            if (string.IsNullOrWhiteSpace(newUser.Name) ||
+                string.IsNullOrWhiteSpace(newUser.Password) ||
+                string.IsNullOrWhiteSpace(newUser.CurrencyType))
+            {
+                errorMessage = "All the details needs to be filled.";
+                return;
+            }
+
+            // try
+            // {
+                var Registered = await UserService.UserRegister(newUser);
+
+                if (Registered)
+                {
+                    // Navigate to the login page on success
+                    Console.WriteLine($"User {newUser.Name} registered successfully.");
+                    NavigationManager.NavigateTo("/login");
+                }
+                else
+                {
+                    // Show an error message if the username already exists
+                    errorMessage = "The username already exists. Please choose a different username.";
+
+                }
+    }
+
+}

@@ -1,0 +1,480 @@
+@page "/dashboard"
+@using Expense_Tracker.Model
+@using Expense_Tracker.Services
+@inject ITransactionService TransactionService
+@inject NavigationManager NavigationManager
+
+<style>
+    h1 {
+        font-size: 2.5rem;
+        color: #343a40;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        color: #495057;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: #fff;
+    }
+    .container{
+        background-color: #273240;
+    }
+
+    .dashboard-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .chart-container {
+        height: 300px;
+    }
+
+    .transaction-list {
+        margin-top: 20px;
+    }
+
+    .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+
+</style>
+
+<div class="container mt-4">
+    <h1 class="fw-bold" style="color:white">Dashboard</h1>
+    <h4 class="fw-bold" style="color:white">Total Balance: @totalBalance </h4>
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between mb-4">
+        <div class="container mt-4">
+            <div class=" d-flex justify-content-end mb-3">
+                <button class="btn btn-primary" @onclick="OpenModal">Add Transaction</button>
+               
+            </div>
+            <!-- Dashboard Cards -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="dashboard-card bg-dark text-white text-center">
+                        <h5>Total Cash Inflows</h5>
+                        <h2>@totalIncome</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card bg-dark text-white text-center">
+                        <h5>Total Cash Outflows</h5>
+                        <h2>@totalExpense</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card bg-dark text-white text-center">
+                        <h5>Total Debts</h5>
+                        <h2>@totalDebt</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card bg-dark text-white text-center">
+                        <h5>Pending Debts</h5>
+                        <h2>@pendingDebt</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card bg-dark text-white text-center">
+                        <h5>Cleared Debts</h5>
+                        <h2>@clearedDebt</h2>
+                    </div>
+                </div>
+            </div>
+
+            
+
+            <!-- Transaction Highlight Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-uppercase fw-bold">Transaction List</h5>
+                    @* <input type="text" class="form-control" placeholder="Search by Title" @bind="searchQuery" /> *@
+
+                    <button @onclick="ToggleSort">Date</button>
+                    <button @onclick="ToggleSortAmount">Amount</button>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Tags</th>
+                                <th>Type</th>
+                                <th>Notes</th>
+                                
+                            </tr>
+                            </thead>
+                            <tbody>
+                            
+                                @* <div class="transaction-list"> *@
+                                    @foreach (var transaction in recentTransactions)
+                                    {
+                                        <tr>
+                                            <td>@transaction.Title</td>
+                                            <td>@transaction.Amount</td>
+                                            <td>@transaction.Date.ToString("yyyy-MM-dd")</td>
+                                            <td>@transaction.Tags</td>
+                                            <td class="@(transaction.Type == "Income" ? "text-success" : transaction.Type == "Expense" ? "text-danger" : "text-warning")">@transaction.Type</td>
+                                            <td>@transaction.Notes</td>
+                                            
+                                        </tr>
+                                   
+                                    }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Debts Section -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-uppercase fw-bold">Pending Debts</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Added Date</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                                <th>Tags</th>
+                                <th>Status</th>
+                                <th>Source</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            
+                                @foreach (var debt in pendingDebts)
+                                {
+                                    <tr>
+                                        <td>@debt.Title</td>
+                                        <td>@debt.Date.ToString("yyyy-MM-dd")</td>
+                                        <td>@debt.DueDate.ToString("yyyy-MM-dd")</td>
+                                        <td>@debt.Amount</td>
+                                        <td>@debt.Tags</td>
+                                <td>
+                                    @if (string.IsNullOrEmpty(debt.Status))
+                                    {
+                                    <span class="badge bg-danger">Pending</span>
+                                    }
+                                    else if (debt.Status == "Cleared")
+                                    {
+                                    <span class="badge bg-success">Cleared</span>
+                                    }
+                                </td>
+                                
+                                
+                                <td>@debt.Source</td>
+                                
+                                    </tr>
+                                
+                                }
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal for Adding Transaction *@
+@if (showModal)
+{
+<div class="modal fade show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog "  role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Transaction</h5>
+                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Title</label>
+                    <input type="text" class="form-control" @bind="newTransaction.Title" />
+                </div>
+                <div class="mb-3">
+                    <label>Amount</label>
+                    <input type="number" class="form-control" @bind="newTransaction.Amount" />
+                </div>
+                <div class="mb-3">
+                    <label>Date</label>
+                    <input type="date" class="form-control" @bind="newTransaction.Date" />
+                </div>
+                
+                <div class="mb-3">
+                    <label>Tags</label>
+                    <input type="text" class="form-control" @bind="newTransaction.Tags" />
+                </div>
+                <div class="mb-3">
+                    <label>Notes</label>
+                    <input type="text" class="form-control" @bind="newTransaction.Notes" />
+                </div>
+                <div class="mb-3">
+                    <label>Type</label>
+                    <select class="form-control" @bind="newTransaction.Type">
+                        <option value="">Select Type</option>
+                        <option value="Income">Income</option>
+                        <option value="Expense">Expense</option>
+                        <option value="Debt">Debt</option>
+                    </select>
+                </div>
+                <div class="mb-3" style="display: @(newTransaction.Type == "Debt" ? "block" : "none")">
+                    <label>Status</label>
+                    <select class="form-control" @bind="newTransaction.Status">
+                        <option value="Pending">Pending</option>
+                        <option value="Cleared">Cleared</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick="AddTransaction">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+@code{
+    private List<Transaction> recentTransactions = new List<Transaction>();
+    private Transaction newTransaction = new Transaction();
+    private bool showModal = false;
+    private List<Transaction> pendingDebts = new List<Transaction>(); 
+    private bool isSortedAscending = false;
+    private string searchQuery = "";
+    
+    private decimal totalIncome = 0;
+    private decimal totalExpense = 0;
+    private decimal totalDebt = 0;
+    private decimal totalBalance = 0;
+    private decimal pendingDebt = 0;
+    private decimal clearedDebt = 0;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch the latest 5 transactions
+        recentTransactions = (await TransactionService.GetTransactionsAsync())
+            .OrderByDescending(t => t.Date)
+            .Take(5)
+            .ToList();
+        
+        foreach (var transaction in recentTransactions)
+        {
+            Console.WriteLine($"Title: {transaction.Title}, Tags: {transaction.Tags}, Notes: {transaction.Notes}");
+        }
+
+        totalIncome = await TransactionService.GetTotalIncomeAsync();
+        totalExpense = await TransactionService.GetTotalExpenseAsync();
+        totalDebt = await TransactionService.GetTotalDebtAsync();
+        pendingDebt = await TransactionService.GetPendingDebtAsync();
+        clearedDebt = await TransactionService.GetClearedDebtAsync();
+        totalBalance = totalIncome - totalExpense + totalDebt;
+    }
+    
+    private void ToggleSort()
+    {
+        if (isSortedAscending)
+        {
+            // Sort in descending order
+            recentTransactions = recentTransactions.OrderByDescending(t => t.Date).ToList();
+        }
+        else
+        {
+            // Sort in ascending order
+            recentTransactions = recentTransactions.OrderBy(t => t.Date).ToList();
+        }
+
+        // Toggle the sort order for next click
+        isSortedAscending = !isSortedAscending;
+    }
+    
+    private void ToggleSortAmount()
+    {
+        if (isSortedAscending)
+        {
+            // Sort in descending order
+            recentTransactions = recentTransactions.OrderByDescending(t => t.Amount).ToList();
+        }
+        else
+        {
+            // Sort in ascending order
+            recentTransactions = recentTransactions.OrderBy(t => t.Amount).ToList();
+        }
+
+        // Toggle the sort order for next click
+        isSortedAscending = !isSortedAscending;
+    }
+    
+    private IEnumerable<Transaction> GetFilteredTransactions()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            return recentTransactions; // No filter, show all transactions
+        }
+
+        return recentTransactions
+            .Where(t => t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) // Filter by title, ignoring case
+            .ToList();
+    }
+
+    
+    private void OpenModal()
+    {
+        newTransaction = new Transaction(); // Reset form data
+        newTransaction.Date = DateTime.Now;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task  AddTransaction()
+    {
+        try
+        {
+            // Validate the new transaction
+            if (newTransaction == null)
+            {
+                throw new ArgumentNullException(nameof(newTransaction), "Transaction details cannot be null.");
+               
+            }
+
+            if (string.IsNullOrWhiteSpace(newTransaction.Title))
+            {
+                throw new ArgumentException("Title is required.", nameof(newTransaction.Title));
+            }
+
+            if (newTransaction.Amount <= 0)
+            {
+                throw new ArgumentException("Amount must be greater than zero.", nameof(newTransaction.Amount));
+            }
+
+            if (string.IsNullOrWhiteSpace(newTransaction.Type))
+            {
+                throw new ArgumentException("Transaction type is required.", nameof(newTransaction.Type));
+            }
+
+            // Add the transaction
+            recentTransactions.Add(new Transaction
+            {
+                Title = newTransaction.Title,
+                Date = newTransaction.Date == default ? DateTime.Now : newTransaction.Date,
+                Amount = newTransaction.Amount,
+                Type = newTransaction.Type,
+                Tags = newTransaction.Tags,
+                Notes = newTransaction.Notes,
+                Status = newTransaction.Type == "Debt" ? (newTransaction.Status ?? "Pending") : null // Default to "Pending" for Debt
+            });
+            Console.WriteLine("Transaction added successfully.");
+                // Check if the transaction is of type 'Debt'
+                
+            if (newTransaction.Type == "Debt")
+            {
+                // Create a new debt entry
+                var newDebt = new Transaction
+                {
+                    Title = newTransaction.Title,
+                    Date = newTransaction.Date,
+                    DueDate = newTransaction.Date.AddMonths(1),  // Set due date to 1 month from the transaction date
+                    Amount = newTransaction.Amount,
+                    Tags = newTransaction.Tags,
+                    Status = newTransaction.Status,
+                    Source = newTransaction.Notes // Assuming Notes are the source of the debt
+                };
+
+                // Add the new debt to the pending debts list
+                pendingDebts.Add(newDebt);
+            }
+            
+            // Recalculate totals
+            CalculateTotals();
+        }
+        catch (Exception ex)
+        {
+            // Log the error (if logging is set up) or display an error message
+            Console.WriteLine($"Error adding transaction: {ex.Message}");
+            // Optionally, display an error message to the user using a notification mechanism
+        }
+        
+        {
+            // Ensure the modal is always closed, even in case of exceptions
+            CloseModal();
+        }
+    }
+
+    
+    private void CalculateTotals()
+    {
+        totalIncome = recentTransactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
+        totalExpense = recentTransactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
+        totalDebt = recentTransactions.Where(t => t.Type == "Debt").Sum(t => t.Amount);
+        pendingDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").Sum(t => t.Amount);
+        clearedDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Cleared").Sum(t => t.Amount);
+        totalBalance = totalIncome - totalExpense + totalDebt;
+    }
+    
+    private void SortTransactionsByDate()
+    {
+        // Sort transactions by Date in descending order
+        recentTransactions = recentTransactions.OrderByDescending(t => t.Date).ToList();
+
+        // Recalculate totals after sorting
+        CalculateTotals();
+    }
+    
+    private void SortTransactionsByAmount()
+    {
+        // Sort transactions by Date in descending order
+        recentTransactions = recentTransactions.OrderByDescending(t => t.Amount).ToList();
+
+        // Recalculate totals after sorting
+        CalculateTotals();
+    }
+
+
+
+}
