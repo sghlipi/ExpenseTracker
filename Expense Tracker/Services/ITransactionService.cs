@@ -15,4 +15,6 @@ public interface ITransactionService
     Task UpdateTransactionAsync(Transaction transaction);
     Task DeleteTransactionAsync(string title);
     
+    Task<List<Transaction>> SearchTransactionsByTitleAsync(string title);
+    
 }
