@@ -24,7 +24,7 @@
 
     <!-- Type Filter -->
     <div class="d-flex align-items-center mb-3">
-        <label for="typeFilter" class="me-2" >Tags:</label>
+        <label for="typeFilter" class="me-2" >Types:</label>
         <select id="typeFilter" class="form-control me-3"  @bind="SelectedType">
             <option value="">All Types</option>
             <option value="Expense">Expense</option>
@@ -399,7 +399,7 @@ private List<Transaction> filteredTransactions = new(); // Filtered list to disp
     private string SelectedTag;
     private string filterErrorMessage;
     private bool displayFilters = false;
-    private string errorMessage = string.Empty;
+    private string errorMessage;
 
 
 protected override async Task OnInitializedAsync()
@@ -476,6 +476,7 @@ private async Task AddTransaction()
     //
     try
     {
+        //if transaction type==Debit check if total balance is sufficient.if total balance is less than   new amout or negative dont add transaction
         // Validate the new transaction
         if (newTransaction == null)
         {
@@ -497,7 +498,23 @@ private async Task AddTransaction()
         {
             throw new ArgumentException("Transaction type is required.", nameof(newTransaction.Type));
         }
-
+        // Calculate total income and expense to determine available balance
+        decimal totalIncome = await TransactionService.GetTotalIncomeAsync();
+        decimal totalExpense = await TransactionService.GetTotalExpenseAsync();
+        decimal totalBalance = totalIncome - totalExpense;
+        
+        // Check for sufficient balance if the transaction type is Debit (outflow)
+        if (newTransaction.Type == "Expense")
+        {
+            // Ensure sufficient balance for Debit transactions (outflows)
+            if (totalBalance < newTransaction.Amount)
+            {
+                errorMessage = "Insufficient balance. Cannot add this transaction.";
+                Console.WriteLine(errorMessage);
+                
+                return; 
+            
+        }
         // Add the transaction
         recentTransactions.Add(new Transaction
         {
@@ -510,7 +527,9 @@ private async Task AddTransaction()
             Status = newTransaction.Type == "Debt" ? (newTransaction.Status ?? "Pending") : null // Default to "Pending" for Debt
         });
         Console.WriteLine("Transaction added successfully.");
-
+        
+        
+        
         if (newTransaction.Type == "Debt")
         {
             // Create a new debt entry
