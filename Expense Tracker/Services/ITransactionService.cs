@@ -5,6 +5,7 @@ using Expense_Tracker.Model;
 public interface ITransactionService
 {
     Task<List<Transaction>> GetTransactionsAsync();
+    Task AddTransactionAsync(Transaction transaction);
     Task<decimal> GetTotalIncomeAsync();
     Task<decimal> GetTotalExpenseAsync();
     Task<decimal> GetTotalDebtAsync();
@@ -15,9 +16,3 @@ public interface ITransactionService
     Task DeleteTransactionAsync(string title);
     
 }
-
-
-
-
-
-     

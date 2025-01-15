@@ -33,7 +33,7 @@ body {
 
 .input{
     border-radius:5px;
-    color:white;
+    /*color:white;*/
 }
 
 label {
@@ -43,16 +43,16 @@ label {
     /*color: white;*/
 }
 
-h3 {
-    color: white;
-    text-align: center; 
-}
+/*h3 {*/
+/*    !*color: white;*!*/
+/*    text-align: center; */
+/*}*/
 
 .db-card {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin-bottom: 20px;
+    /*padding: 20px;*/
+    /*margin-bottom: 20px;*/
 }
 
 .db-header {

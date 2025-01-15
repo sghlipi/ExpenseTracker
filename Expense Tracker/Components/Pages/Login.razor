@@ -5,26 +5,25 @@
 @inject NavigationManager NavigationManager
 @inject LoginStateService LoginStateService
 
-<div class="container">
-    <div class="card w-300">
-        <div class="card-body">
-            <form>
-                <h3 class="text-center mb-4">Sign In</h3>
-                <div class="mb-4">
-                    <label for="name" style="color: white">Name:</label>
-                    <input id="name" class="w-100" type="text" @bind="loginUser.Name" />
-                </div>
+<div class="card shadow-sm">
+    
+    <div class="card-body">
+        <form>
+            <h3 class="text-center mb-4" style="color:white">Sign In</h3>
+            <div class="mb-4">
+                <label for="name" style="color: white">Name:</label>
+                <input id="name" class="w-100" type="text" @bind="loginUser.Name"/>
+            </div>
 
-                <div class="mb-4">
-                    <label for="password" style="color: white">Password:</label>
-                    <input id="password" class="w-100" type="password" @bind="loginUser.Password" />
-                </div>
-                <p class="text-center" style="color: white">Forgot Password?</p>
-                <button type="button" class="btn btn-primary w-100" @onclick="SignIn">Sign In</button>
-                <p class="error-message">@errorMessage</p>
-            </form>
-           
-        </div>
+            <div class="mb-4">
+                <label for="password" style="color: white">Password:</label>
+                <input id="password" class="w-100" type="password" @bind="loginUser.Password"/>
+            </div>
+            <p class="text-center" style="color: white">Forgot Password?</p>
+            <button type="button" class="btn btn-primary w-100" @onclick="SignIn">Sign In</button>
+            <p class="error-message">@errorMessage</p>
+        </form>
+
     </div>
 </div>
 

@@ -66,7 +66,7 @@ namespace Expense_Tracker.Services
             var json = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
 
             await File.WriteAllTextAsync(usersFilePath, json);
-            Console.WriteLine($"Unexpected error to save user:");
+            Console.WriteLine($"Save user:");
 
         }
 

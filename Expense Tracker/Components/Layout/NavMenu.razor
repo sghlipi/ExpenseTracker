@@ -28,28 +28,29 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Track Expense</a>
+        <a class="navbar-brand fw-bold text-uppercase d-flex justify-content-center mt-3 "  style="color:black" href="">Track Expense</a>
     </div>
 </div>
+@* <input  title="Navigation menu" class="navbar-toggler" /> *@
 
-<input  title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="dashboard" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="transaction">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span>
-            </NavLink>
-        </div>
+    <nav class="d-flex justify-content-center mt-3">
+        <ul class="nav border rounded shadow-sm bg-white p-1">
+            <li class="nav-item">
+                <a href="dashboard" class="nav-link active">Dashboard</a>
+            </li>
+            
+                <li class="nav-item">
+                    <a href="transaction" class="nav-link active">Transaction</a>
+                </li>
+        </ul>
+    </nav>
+    
+        
         @* <div class="nav-item px-3"> *@
         @*     <NavLink class="nav-link" href="weather"> *@
         @*         <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather *@
         @*     </NavLink> *@
         @* </div> *@
-    </nav>
 </div>

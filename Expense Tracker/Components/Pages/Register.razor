@@ -4,37 +4,36 @@
 @inject IUserService UserService
 @inject NavigationManager NavigationManager
 
-<div class="container">
-    <div class="card w-300">
-        <div class="card-body">
-            
-            <form @onsubmit="SignUp">
-                <h3 class="text-center mb-4">Create Account</h3>
-                <div class="mb-4">
-                    <label style="color: white">Name:</label>
-                    <input class="w-100" type="text" @bind="newUser.Name"/>
-                </div>
+<div class="card shadow-sm">
+    
+    <div class="card-body">
 
-                <div class="mb-4">
-                    <label style="color: white">Password:</label>
-                    <input class="w-100" type="password" @bind="newUser.Password"/>
-                </div>
+        <form @onsubmit="SignUp">
+            <h3 class="text-center mb-4" style="color:white">Create Account</h3>
+            <div class="mb-4">
+                <label style="color: white">Name:</label>
+                <input class="w-100" type="text" @bind="newUser.Name"/>
+            </div>
 
-                <div class="mb-4">
-                    <label style="color: white">Currency Type:</label>
-                    <select id="CurrencyType" name="CurrencyType" @bind="newUser.CurrencyType" required>
-                        <option class="w-100" value="USD">USD</option>
-                        <option class="w-100" value="EUR">EUR</option>
-                        <option class="w-100" value="INR">INR</option>
-                        <option class="w-100" value="NPR">NPR</option>
-                    </select>
-                </div>
+            <div class="mb-4">
+                <label style="color: white">Password:</label>
+                <input class="w-100" type="password" @bind="newUser.Password"/>
+            </div>
+
+            <div class="mb-4">
+                <label style="color: white">Currency Type:</label>
+                <select id="CurrencyType" name="CurrencyType" @bind="newUser.CurrencyType" required>
+                    <option class="w-100" value="USD">USD</option>
+                    <option class="w-100" value="EUR">EUR</option>
+                    <option class="w-100" value="INR">INR</option>
+                    <option class="w-100" value="NPR">NPR</option>
+                </select>
+            </div>
 
 
-                <button type="submit" class="w-100" @onclick="SignUp">Sign Up</button>
-                <p class="error-message">@errorMessage</p>
-            </form>
-        </div>
+            <button type="submit" class="w-100" @onclick="SignUp">Sign Up</button>
+            <p class="error-message">@errorMessage</p>
+        </form>
     </div>
 </div>
 

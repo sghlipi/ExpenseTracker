@@ -73,6 +73,7 @@ public class TransactionService : ITransactionService
 
     public Task SaveTransactionAsync(Transaction transaction)
     {
+        transaction.Date = DateTime.Now;
         transact.Add(transaction);
         SaveTransactionsToJson();
         Console.WriteLine($"Transaction '{transaction.Title}' has been saved successfully to the file.");
@@ -82,44 +83,36 @@ public class TransactionService : ITransactionService
 
     public Task UpdateTransactionAsync(Transaction transaction)
     {
-        try
+        var existingTransaction = transact.FirstOrDefault(t => t.Title == transaction.Title);
+        if (existingTransaction == null)
         {
-            var existingTransaction = transact.FirstOrDefault(t => t.Title == transaction.Title);
-
-            if (existingTransaction != null)
-            {
-                // Update the transaction details
-                existingTransaction.Title = transaction.Title;
-                existingTransaction.Date = transaction.Date;
-                existingTransaction.Amount = transaction.Amount;
-                existingTransaction.Type = transaction.Type;
-                existingTransaction.Status = transaction.Status;
-                existingTransaction.Notes = transaction.Notes;
-                existingTransaction.Tags = transaction.Tags;
-                existingTransaction.Status = transaction.Status;
-                existingTransaction.DueDate = transaction.DueDate;
-                existingTransaction.Source = transaction.Source;
-
-                // Save the updated transactions back to JSON
-                SaveTransactionsToJson();
-            }
-            else
-            {
-                throw new InvalidOperationException($"Transaction with title '{transaction.Title}' not found.");
-            }
-        }
-        catch (Exception ex)
-        {
-            // Log the error (you can replace Console.WriteLine with a logging framework if needed)
-            Console.WriteLine($"An error occurred while updating the transaction: {ex.Message}");
-        
-            // Optionally, rethrow the exception if you want to propagate it to the caller
-            throw;
+            throw new InvalidOperationException($"Transaction with title '{transaction.Title}' not found.");
         }
 
+        existingTransaction.Title = transaction.Title;
+        existingTransaction.Date = transaction.Date;
+        existingTransaction.Amount = transaction.Amount;
+        existingTransaction.Type = transaction.Type;
+        existingTransaction.Status = transaction.Status;
+        existingTransaction.Notes = transaction.Notes;
+        existingTransaction.Tags = transaction.Tags;
+        existingTransaction.DueDate = transaction.DueDate;
+        existingTransaction.Source = transaction.Source;
+
+        SaveTransactionsToJson();
         return Task.CompletedTask;
     }
-    
+    public Task AddTransactionAsync(Transaction transaction)
+    {
+        // Do not overwrite the date if it's already set
+        if (transaction.Date == default)
+        {
+            transaction.Date = DateTime.Now; // Assign the date only if it's not provided
+        }
+        
+        transact.Add(transaction);
+        return Task.CompletedTask;
+    } 
 
 
     public Task DeleteTransactionAsync(string title)
