@@ -121,4 +121,14 @@ public class TransactionService : ITransactionService
         SaveTransactionsToJson();
         return Task.CompletedTask;
     }
+    
+    // Implement the search functionality
+    public Task<List<Transaction>> SearchTransactionsByTitleAsync(string title)
+    {
+        var filteredTransactions = transact
+            .Where(t => t.Title.Contains(title, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return Task.FromResult(filteredTransactions);
+    }
 }
