@@ -353,6 +353,7 @@ private decimal totalDebt;
 private decimal pendingDebt;
 private decimal clearedDebt;
 private decimal totalBalance;
+private decimal inflowClearedDebt;
 
 
 
@@ -383,12 +384,14 @@ CalculateTotals();
 
 private void CalculateTotals()
 {
-    totalIncome = recentTransactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
+    totalIncome = recentTransactions.Where(t => t.Type == "Income").Sum(t => t.Amount)- clearedDebt;
     totalExpense = recentTransactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
     totalDebt = recentTransactions.Where(t => t.Type == "Debt").Sum(t => t.Amount);
     pendingDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").Sum(t => t.Amount);
     clearedDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Cleared").Sum(t => t.Amount);
     totalBalance = totalIncome - totalExpense + totalDebt;
+    
+    
 }
 
 
