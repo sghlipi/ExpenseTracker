@@ -50,9 +50,10 @@
 
 
     <!-- Buttons -->
-    @* <button class="btn btn-primary" @onclick="ApplyFilters">Filter</button> *@
-    @* <button class="btn btn-secondary ms-2" @onclick="ClearFilters">Clear</button> *@
-    @* </div> *@
+    <!-- Filter button for applying filters (like date, type, tags, etc.) -->
+    <div class="mb-3">
+        <button @onclick="ApplyFilters" class="btn btn-secondary">Apply Filters</button>
+    </div>
 
     <!-- Display Error Message -->
     @if (!string.IsNullOrEmpty(filterErrorMessage))
@@ -60,13 +61,26 @@
         <div class="error-message">@filterErrorMessage</div>
     }
 
+    <!-- Search by title -->
+    <div class="mb-3">
+        <input type="text" @bind="searchQuery" placeholder="Search by title..." class="form-control" />
+        <button @onclick="SearchByTitle" class="btn btn-primary mt-2">Search</button>
+        <!-- Clear button to reset all filters and search -->
+        <button @onclick="ClearFilters" class="btn btn-danger mt-2">Clear</button>
+    </div>
+
     <div class="d-flex mb-3">
         @* <input type="text" class="form-control me-2" placeholder="Search by Title..." @bind="searchQuery" @oninput="SearchTransactions" /> *@
         <button class="btn btn-primary me-3" @onclick="OpenModal">Add Transaction</button>
         <button  class="w-30 me-2  " @onclick="ToggleSort">Date</button>
         <button class="w-30" @onclick="ToggleSortAmount">Amount</button>
     </div>
-        
+
+    
+
+
+    
+
 
 
     <div class="table-responsive">
@@ -378,6 +392,13 @@
                     <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
                     <button type="button" class="btn btn-primary" @onclick="AddTransaction">Add</button>
                 </div>
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                <div class="alert alert-danger">
+                    @errorMessage
+                </div>
+                }
+
             </div>
         </div>
     </div>
@@ -392,6 +413,7 @@ private Transaction newTransaction = new();
 private List<Transaction> filteredTransactions = new(); // Filtered list to display
 // private string searchQuery = string.Empty; // The search query
     private bool isSortedAscending = false;
+    private string searchQuery = ""; // Added search query field
     
     private DateTime? startDate;
     private DateTime? endDate;
@@ -409,45 +431,49 @@ await LoadDebts();
 filteredTransactions = new List<Transaction>(recentTransactions);
 }
 
-// private void ApplyFilters()
-// {
-//     if (startDate.HasValue && endDate.HasValue)
-//     {
-//         if (startDate.Value > endDate.Value)
-//         {
-//             // Invalid range: Start date is after end date
-//             filterErrorMessage = "Start date cannot be after the end date.";
-//             filteredTransactions = new List<Transaction>(); // Clear filtered transactions
-//             displayFilters = false; 
-//         }
-//         else
-//         {
-//             // Apply filters
-//             filteredTransactions = recentTransactions.Where(t =>
-//                 (string.IsNullOrEmpty(SelectedType) || t.Type == SelectedType) &&
-//                 (string.IsNullOrEmpty(SelectedTag) || t.Tags == SelectedTag) &&
-//                 (!startDate.HasValue || t.Date >= startDate.Value) &&
-//                 (!endDate.HasValue || t.Date <= endDate.Value)
-//             ).ToList();
-//             displayFilters = true;
-//         }
-//     }
-// }
-//
-//
-//
-// private void ClearFilters()
-// {
-//     startDate = null;
-//     endDate = null;
-//     SelectedType = string.Empty;
-//     SelectedTag = string.Empty;
-//     filterErrorMessage = string.Empty;
-//     filteredTransactions = new List<Transaction>(recentTransactions);
-//     displayFilters = false;
-// }
+private void ApplyFilters()
+{
+    var filtered = recentTransactions;
 
-// Method to calculate current balance
+    // Apply date filters if set
+    if (startDate.HasValue)
+    {
+        filtered = filtered.Where(t => t.Date >= startDate.Value).ToList();
+    }
+
+    if (endDate.HasValue)
+    {
+        filtered = filtered.Where(t => t.Date <= endDate.Value).ToList();
+    }
+
+    // Apply type filter if set
+    if (!string.IsNullOrEmpty(SelectedType))
+    {
+        filtered = filtered.Where(t => t.Type == SelectedType).ToList();
+    }
+
+    // Apply tag filter if set
+    if (!string.IsNullOrEmpty(SelectedTag))
+    {
+        filtered = filtered.Where(t => t.Tags.Contains(SelectedTag)).ToList();
+    }
+
+    // Update the recentTransactions directly with the filtered list
+    recentTransactions = filtered;
+}
+
+// Clear method to reset search and filters
+private void ClearFilters()
+{
+    searchQuery = ""; // Reset search query
+    startDate = null;  // Reset start date filter
+    endDate = null;    // Reset end date filter
+    SelectedType = ""; // Reset type filter
+    SelectedTag = "";  // Reset tag filter
+
+    // Reload all transactions without any filters
+    LoadTransactions();
+}
     
     
 
@@ -464,7 +490,16 @@ private async Task LoadDebts()
     pendingDebts = allDebts.Where(d => d.Type == "Debt").ToList();
 }
 
-
+// Search method based on title
+private void SearchByTitle()
+{
+    if (!string.IsNullOrEmpty(searchQuery))
+    {
+        recentTransactions = recentTransactions
+            .Where(t => t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+}
 
 private async Task AddTransaction()
 {
@@ -476,7 +511,7 @@ private async Task AddTransaction()
     //
     try
     {
-        //if transaction type==Debit check if total balance is sufficient.if total balance is less than   new amout or negative dont add transaction
+
         // Validate the new transaction
         if (newTransaction == null)
         {
@@ -498,11 +533,12 @@ private async Task AddTransaction()
         {
             throw new ArgumentException("Transaction type is required.", nameof(newTransaction.Type));
         }
+
         // Calculate total income and expense to determine available balance
         decimal totalIncome = await TransactionService.GetTotalIncomeAsync();
         decimal totalExpense = await TransactionService.GetTotalExpenseAsync();
         decimal totalBalance = totalIncome - totalExpense;
-        
+
         // Check for sufficient balance if the transaction type is Debit (outflow)
         if (newTransaction.Type == "Expense")
         {
@@ -511,10 +547,42 @@ private async Task AddTransaction()
             {
                 errorMessage = "Insufficient balance. Cannot add this transaction.";
                 Console.WriteLine(errorMessage);
-                
-                return; 
-            
+
+                return;
+            }
+
         }
+        
+        // Check if this is a Debt and if it is being marked as 'Paid'
+        if (newTransaction.Type == "Debt" && newTransaction.Status == "Cleared")
+        {
+            // Ensure that the total income is sufficient to clear the debt
+            if (totalBalance >= newTransaction.Amount)
+            {
+                // Reduce the income by the amount of debt cleared
+                totalIncome -= newTransaction.Amount;
+               
+                // or log the new total income as needed
+                Console.WriteLine($"Income reduced by {newTransaction.Amount}. New total income: {totalIncome}");
+
+                // Optionally, update the database with the reduced income, if needed
+                // Example: await IncomeService.UpdateTotalIncomeAsync(totalIncome);
+                
+                // Remove the debt from the pending debts list
+                pendingDebts.RemoveAll(d => d.Title == newTransaction.Title && d.Amount == newTransaction.Amount);
+
+                Console.WriteLine("Debt cleared and income updated.");
+            }
+            else
+            {
+                // If the balance is insufficient to clear the debt, show an error message
+                errorMessage = "Insufficient balance to clear the debt.";
+                Console.WriteLine(errorMessage);
+                return;
+            }
+        }
+       
+
         // Add the transaction
         recentTransactions.Add(new Transaction
         {
@@ -527,30 +595,34 @@ private async Task AddTransaction()
             Status = newTransaction.Type == "Debt" ? (newTransaction.Status ?? "Pending") : null // Default to "Pending" for Debt
         });
         Console.WriteLine("Transaction added successfully.");
-        
-        
-        
+    
+
+
+
         if (newTransaction.Type == "Debt")
         {
-            // Create a new debt entry
-            var newDebt = new Transaction
+           
             {
-                Title = newTransaction.Title,
-                Date = newTransaction.Date,
-                DueDate = newTransaction.Date.AddMonths(1), // Set due date to 1 month from the transaction date
-                Amount = newTransaction.Amount,
-                Tags = newTransaction.Tags,
-                Status = newTransaction.Status,
-                Notes = newTransaction.Notes // Assuming Notes are the source of the debt
-            };
+                // Create a new debt entry
+                var newDebt = new Transaction
+                {
+                    Title = newTransaction.Title,
+                    Date = newTransaction.Date,
+                    DueDate = newTransaction.Date.AddMonths(1), // Set due date to 1 month from the transaction date
+                    Amount = newTransaction.Amount,
+                    Tags = newTransaction.Tags,
+                    Status = newTransaction.Status,
+                    Notes = newTransaction.Notes // Assuming Notes are the source of the debt
+                };
 
-            // Add the new debt to the pending debts list
-            await TransactionService.AddTransactionAsync(newDebt);
-            pendingDebts.Add(newDebt);
-            // newTransaction.Status = "Pending"; // Default status for new debts
+                // Add the new debt to the pending debts list
+                await TransactionService.AddTransactionAsync(newDebt);
+                pendingDebts.Add(newDebt);
+                // newTransaction.Status = "Pending"; // Default status for new debts
+            }
+
+
         }
-        
-        
     }
     catch (Exception ex)
     {
@@ -558,7 +630,7 @@ private async Task AddTransaction()
         Console.WriteLine($"Error adding transaction: {ex.Message}");
         // Optionally, display an error message to the user using a notification mechanism
     }
-        
+
     {
         // Ensure the modal is always closed, even in case of exceptions
         CloseModal();
