@@ -141,30 +141,35 @@
                 <div class="dashboard-card bg-dark text-white text-center">
                     <h5>Total Cash Inflows</h5>
                     <h2>@totalIncome</h2>
+                    <p>@incomeTransactionCount</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="dashboard-card bg-dark text-white text-center">
                     <h5>Total Cash Outflows</h5>
                     <h2>@totalExpense</h2>
+                    <p>@expenseTransactionCount</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="dashboard-card bg-dark text-white text-center">
                     <h5>Total Debts</h5>
                     <h2>@totalDebt</h2>
+                    <p>@debtTransactionCount</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="dashboard-card bg-dark text-white text-center">
                     <h5>Pending Debts</h5>
                     <h2>@pendingDebt</h2>
+                    <p>@pendingDebtTransactionCount</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="dashboard-card bg-dark text-white text-center">
                     <h5>Cleared Debts</h5>
                     <h2>@clearedDebt</h2>
+                    <p>@clearedDebtTransactionCount</p>
                 </div>
             </div>
         </div>
@@ -180,6 +185,22 @@
             <button class="btn btn-primary" @onclick="FilterByDateRange">Filter</button>
             <button class="btn btn-secondary ms-2" @onclick="ClearFilters">Clear</button>
         </div>
+        <!-- Top 5 Transactions Section -->
+        <div class="card shadow-sm mb-4 top-transactions">
+            <div class="card-body">
+                <h5 class="card-title text-uppercase fw-bold">Top 5 Transactions</h5>
+                <div class="transaction-list">
+                    @foreach (var transaction in top5Transactions)
+                    {
+                    <div class="transaction-item">
+                        <div>@transaction.Title</div>
+                        <div class="amount">@transaction.Amount</div>
+                        <div>@transaction.Date.ToString("yyyy-MM-dd")</div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
         
         
         <!-- Transaction Highlight Section -->
@@ -188,8 +209,8 @@
                 <h5 class="card-title text-uppercase fw-bold">Transaction List</h5>
                 @* <input type="text" class="form-control" placeholder="Search by Title" @bind="searchQuery" /> *@
 
-                <button @onclick="ToggleSort">Date</button>
-                <button @onclick="ToggleSortAmount">Amount</button>
+                @* <button @onclick="ToggleSort">Date</button> *@
+                @* <button @onclick="ToggleSortAmount">Amount</button> *@
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">
@@ -239,7 +260,7 @@
                             <th>Amount</th>
                             <th>Tags</th>
                             <th>Status</th>
-                            <th>Source</th>
+                            @* <th>Notes</th> *@
                         </tr>
                         </thead>
                         <tbody>
@@ -252,17 +273,17 @@
                                 <td>@debt.DueDate.ToString("yyyy-MM-dd")</td>
                                 <td>@debt.Amount</td>
                                 <td>@debt.Tags</td>
-                                <td>@debt.Notes</td>
-                                <td>
-                                    @if (string.IsNullOrEmpty(debt.Status))
-                                    {
-                                        <span class="badge bg-danger">Pending</span>
-                                    }
-                                    else if (debt.Status == "Cleared")
-                                    {
-                                        <span class="badge bg-success">Cleared</span>
-                                    }
-                                </td>
+                                @* <td>@debt.Notes</td> *@
+                                <td class="badge bg-danger">@debt.Status</td>
+                                    @* @if (string.IsNullOrEmpty(debt.Status)) *@
+                                    @* { *@
+                                    @*     <span class="badge bg-danger">Pending</span> *@
+                                    @* } *@
+                                    @* else if (debt.Status == "Cleared") *@
+                                    @* { *@
+                                    @*     <span class="badge bg-success">Cleared</span> *@
+                                    @* } *@
+                                    @* *@
                                 
 
                             </tr>
@@ -335,139 +356,170 @@
 @* </div> *@
 @* } *@
 @code {
-private List<Transaction> recentTransactions = new();
-private List<Transaction> pendingDebts = new();
-private List<Transaction> filteredTransactions = new();
-private DateTime? startDate;
-private DateTime? endDate;
-private string filterErrorMessage;
-private bool displayFilters = false;
-private decimal currentBalance;
-private string feedbackMessage;
+    private List<Transaction> recentTransactions = new();
+    private List<Transaction> pendingDebts = new();
+    private List<Transaction> filteredTransactions = new();
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private string filterErrorMessage;
+    private bool displayFilters = false;
+    private decimal currentBalance;
+    private string feedbackMessage;
 
 
 
-private decimal totalIncome;
-private decimal totalExpense;
-private decimal totalDebt;
-private decimal pendingDebt;
-private decimal clearedDebt;
-private decimal totalBalance;
-private decimal inflowClearedDebt;
+    private decimal totalIncome;
+    private decimal totalExpense;
+    private decimal totalDebt;
+    private decimal pendingDebt;
+    private decimal clearedDebt;
+    private decimal totalBalance;
+
+    private int incomeTransactionCount;
+    private int expenseTransactionCount;
+    private int debtTransactionCount;
+    private int pendingDebtTransactionCount;
+    private int clearedDebtTransactionCount;
+
+    private List<Transaction> top5Transactions = new();
+
 
 
 
 
 // private bool showModal = false;
-private Transaction newTransaction = new();
+    private Transaction newTransaction = new();
 // private string searchQuery = "";
 
-protected override async Task OnInitializedAsync()
-{
-await LoadTransactions();
-filteredTransactions = new List<Transaction>(recentTransactions);
-}
-
-private async Task LoadTransactions()
-{
-recentTransactions = await TransactionService.GetTransactionsAsync();
-totalIncome = await TransactionService.GetTotalIncomeAsync();
-totalExpense = await TransactionService.GetTotalExpenseAsync();
-totalDebt = await TransactionService.GetTotalDebtAsync();
-pendingDebt = await TransactionService.GetPendingDebtAsync();
-clearedDebt = await TransactionService.GetClearedDebtAsync();
-
-totalBalance = totalIncome - totalExpense + pendingDebt;
-pendingDebts = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").ToList();
-CalculateTotals();
-}
-
-private void CalculateTotals()
-{
-    totalIncome = recentTransactions.Where(t => t.Type == "Income").Sum(t => t.Amount)- clearedDebt;
-    totalExpense = recentTransactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
-    totalDebt = recentTransactions.Where(t => t.Type == "Debt").Sum(t => t.Amount);
-    pendingDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").Sum(t => t.Amount);
-    clearedDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Cleared").Sum(t => t.Amount);
-    totalBalance = totalIncome - totalExpense + totalDebt;
-    
-    
-}
-
-
-
-private void FilterByDateRange()
-{
-    if (startDate.HasValue && endDate.HasValue)
+    protected override async Task OnInitializedAsync()
     {
-        if (startDate.Value > endDate.Value)
+        await LoadTransactions();
+        filteredTransactions = new List<Transaction>(recentTransactions);
+        top5Transactions = GetTop5Transactions();
+    }
+
+    private async Task LoadTransactions()
+    {
+        // Load the transactions
+        recentTransactions = await TransactionService.GetTransactionsAsync();
+        totalIncome = await TransactionService.GetTotalIncomeAsync();
+        totalExpense = await TransactionService.GetTotalExpenseAsync();
+        totalDebt = await TransactionService.GetTotalDebtAsync();
+        pendingDebt = await TransactionService.GetPendingDebtAsync();
+        clearedDebt = await TransactionService.GetClearedDebtAsync();
+
+        totalBalance = totalIncome - totalExpense + pendingDebt;
+        pendingDebts = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").ToList();
+        CalculateTotals();
+        
+
+// Calculate transaction counts
+        CalculateTransactionCounts();
+    }
+
+    private void CalculateTotals()
+    {
+        totalIncome = recentTransactions.Where(t => t.Type == "Income").Sum(t => t.Amount) - clearedDebt;
+        totalExpense = recentTransactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
+        totalDebt = recentTransactions.Where(t => t.Type == "Debt").Sum(t => t.Amount);
+        pendingDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").Sum(t => t.Amount);
+        clearedDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Cleared").Sum(t => t.Amount);
+        totalBalance = totalIncome - totalExpense + totalDebt;
+
+
+    }
+
+    private void CalculateTransactionCounts()
+    {
+        incomeTransactionCount = recentTransactions.Count(t => t.Type == "Income");
+        expenseTransactionCount = recentTransactions.Count(t => t.Type == "Expense");
+        debtTransactionCount = recentTransactions.Count(t => t.Type == "Debt");
+        pendingDebtTransactionCount = recentTransactions.Count(t => t.Type == "Debt" && t.Status == "Pending");
+        clearedDebtTransactionCount = recentTransactions.Count(t => t.Type == "Debt" && t.Status == "Cleared");
+    }
+
+    private List<Transaction> GetTop5Transactions()
+    {
+        // Sort the transactions by amount in descending order and take the top 5
+        return recentTransactions.OrderByDescending(t => t.Amount).Take(5).ToList();
+    }
+
+
+
+    private void FilterByDateRange()
+    {
+        if (startDate.HasValue && endDate.HasValue)
         {
-            // Invalid range: Start date is after end date
-            filterErrorMessage = "Start date cannot be after the end date.";
-            filteredTransactions = new List<Transaction>(); // Clear filtered transactions
-            displayFilters = false; 
+            if (startDate.Value > endDate.Value)
+            {
+                // Invalid range: Start date is after end date
+                filterErrorMessage = "Start date cannot be after the end date.";
+                filteredTransactions = new List<Transaction>(); // Clear filtered transactions
+                displayFilters = false;
+            }
+            else
+            {
+                // Valid range: Apply the filter
+                filterErrorMessage = string.Empty; // Clear any existing error message
+                filteredTransactions = recentTransactions
+                    .Where(t => t.Date.Date >= startDate.Value.Date && t.Date.Date <= endDate.Value.Date)
+                    .ToList();
+                displayFilters = true;
+            }
         }
         else
         {
-            // Valid range: Apply the filter
-            filterErrorMessage = string.Empty; // Clear any existing error message
-            filteredTransactions = recentTransactions
-                .Where(t => t.Date.Date >= startDate.Value.Date && t.Date.Date <= endDate.Value.Date)
-                .ToList();
-            displayFilters = true;
+            // Filters are not set
+            filterErrorMessage = "Please select both a start date and an end date.";
+            filteredTransactions = new List<Transaction>(recentTransactions); // Clear filtered transactions
+            displayFilters = false;
         }
+
     }
-    else
+
+
+    private void ClearFilters()
     {
-        // Filters are not set
-        filterErrorMessage = "Please select both a start date and an end date.";
-        filteredTransactions = new List<Transaction>(recentTransactions); // Clear filtered transactions
+        startDate = null;
+        endDate = null;
+        filterErrorMessage = string.Empty;
+        filteredTransactions = new List<Transaction>(recentTransactions);
         displayFilters = false;
     }
-    
-}
 
-
-private void ClearFilters()
-{
-    startDate = null;
-    endDate = null;
-    filterErrorMessage = string.Empty;
-    filteredTransactions = new List<Transaction>(recentTransactions);
-    displayFilters = false;
 }
 
 
 
 
-// private async Task AddTransaction()
-// {
-// await TransactionService.SaveTransactionAsync(newTransaction);
-// newTransaction = new Transaction();
-// await LoadTransactions();
-// CloseModal();
-// }
-//
-// private void OpenModal()
-// {
-// showModal = true;
-// }
-//
-// private void CloseModal()
-// {
-// showModal = false;
-// }
+@* // private async Task AddTransaction() *@
+@* // { *@
+@* // await TransactionService.SaveTransactionAsync(newTransaction); *@
+@* // newTransaction = new Transaction(); *@
+@* // await LoadTransactions(); *@
+@* // CloseModal(); *@
+@* // } *@
+@* // *@
+@* // private void OpenModal() *@
+@* // { *@
+@* // showModal = true; *@
+@* // } *@
+@* // *@
+@* // private void CloseModal() *@
+@* // { *@
+@* // showModal = false; *@
+@* // } *@
 
-private void ToggleSort()
-{
-recentTransactions = recentTransactions.OrderBy(t => t.Date).ToList();
-}
-
-private void ToggleSortAmount()
-{
-recentTransactions = recentTransactions.OrderBy(t => t.Amount).ToList();
-}
-}
+@* private void ToggleSort() *@
+@* { *@
+@* recentTransactions = recentTransactions.OrderBy(t => t.Date).ToList(); *@
+@* } *@
+@* *@
+@* private void ToggleSortAmount() *@
+@* { *@
+@* recentTransactions = recentTransactions.OrderBy(t => t.Amount).ToList(); *@
+@* } *@
+@* } *@
 
 @* @code{ *@
 @* private List<Transaction> recentTransactions = new List<Transaction>(); *@

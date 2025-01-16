@@ -40,6 +40,19 @@ public class TransactionService : ITransactionService
     {
         return Task.FromResult(transact);
     }
+    
+    // Method to get top 5 most recent transactions
+    public Task<List<Transaction>> GetTop5TransactionsAsync()
+    {
+        // Get the top 5 transactions ordered by the date in descending order (most recent first)
+        var top5Transactions = transact
+            .OrderByDescending(t => t.Date)
+            .Take(5)
+            .ToList();
+
+        return Task.FromResult(top5Transactions);
+    }
+    
 
     public Task<decimal> GetTotalIncomeAsync()
     {
@@ -104,13 +117,25 @@ public class TransactionService : ITransactionService
     }
     public Task AddTransactionAsync(Transaction transaction)
     {
-        // Do not overwrite the date if it's already set
+        // Check if the transaction already exists
+        if (transact.Any(t => t.Title == transaction.Title && t.Amount == transaction.Amount && t.Date == transaction.Date))
+        {
+            throw new InvalidOperationException("This transaction already exists.");
+        }
+    
         if (transaction.Date == default)
         {
             transaction.Date = DateTime.Now; // Assign the date only if it's not provided
         }
         
+        // Set the due date for debts
+        if (transaction.Type == "Debt")
+        {
+            transaction.DueDate = DateTime.Now;  // Example logic for due date
+        }
+    
         transact.Add(transaction);
+        SaveTransactionsToJson(); 
         return Task.CompletedTask;
     } 
 
