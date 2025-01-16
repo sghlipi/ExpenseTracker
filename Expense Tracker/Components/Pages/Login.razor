@@ -44,20 +44,14 @@
             errorMessage = "All fields are required.";
             return;
         }
-
-        // try
-        // {
-        // Fetch the user from the UserService
+        
         var user = await UserService.GetUser(loginUser.Name);
 
         // Validate the user
         if (user != null && user.Password == loginUser.Password) // Replace this with a hashed password comparison
         {
-            // Set the authenticated user
-            LoginStateService.SetAuthenticatedUser(user);
-
-            // Navigate to the dashboard
-            NavigationManager.NavigateTo("/dashboard");
+            LoginStateService.SetAuthenticatedUser(user); // Set the authenticated user
+            NavigationManager.NavigateTo("/dashboard");// Navigate to the dashboard
         }
         else
         {

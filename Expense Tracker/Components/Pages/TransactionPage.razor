@@ -6,12 +6,9 @@
 @inject NavigationManager NavigationManager
 
 <!-- Transaction Page -->
-@* <div class="container"> *@
-@*     <div class="d-flex justify-content-between align-items-center mb-3"> *@
 <div  class="card shadow-sm">
 <div  class="card-body">
     <h3 class="fw-bold text-uppercase fw-bold" style="color:black">Transaction List</h3>
-    @* <button class="btn btn-primary" @onclick="OpenModal">Add Transaction</button> *@
 
     <!-- Date Filter -->
     <div class="d-flex align-items-center mb-3">
@@ -50,7 +47,6 @@
 
 
     <!-- Buttons -->
-    <!-- Filter button for applying filters (like date, type, tags, etc.) -->
     <div class="mb-3">
         <button @onclick="ApplyFilters" class="btn btn-primary">Apply Filters</button>
     </div>
@@ -259,22 +255,6 @@
                         </td>
                         
                         <td>
-                            @* @if (debt.Status == "Pending") *@
-                            @* { *@
-                            @*     <span class="badge bg-danger">Pending</span> *@
-                            @* } *@
-                            @* else if (debt.Status == "Cleared") *@
-                            @* { *@
-                            @*     <span class="badge bg-success">Cleared</span> *@
-                            @* } *@
-                            @* @if (string.IsNullOrEmpty(debt.Status)) *@
-                            @* { *@
-                            @*     <span class="badge bg-danger">Pending</span> *@
-                            @* } *@
-                            @* else if (debt.Status == "Cleared") *@
-                            @* { *@
-                            @*     <span class="badge bg-success">Cleared</span> *@
-                            @* } *@
                             @if (debt.IsEditing)
                             {
                                 <select class="form-control" @bind="debt.Status">
@@ -329,8 +309,6 @@
         </div>
     </div>
 </div>
-
-
 
 
 @* Modal for Adding Transaction *@
@@ -401,12 +379,12 @@
 
 
 @code {
-private List<Transaction> recentTransactions = new();
-private List<Transaction> pendingDebts = new();
-private bool showModal = false;
-private Transaction newTransaction = new();
-private List<Transaction> filteredTransactions = new(); // Filtered list to display
-// private string searchQuery = string.Empty; // The search query
+
+    private List<Transaction> recentTransactions = new();
+    private List<Transaction> pendingDebts = new();
+    private bool showModal = false;
+    private Transaction newTransaction = new();
+    private List<Transaction> filteredTransactions = new(); // Filtered list to display
     private bool isSortedAscending = false;
     private string searchQuery = ""; // Added search query field
     
@@ -417,9 +395,9 @@ private List<Transaction> filteredTransactions = new(); // Filtered list to disp
     private string filterErrorMessage;
     private bool displayFilters = false;
     private string errorMessage;
-
-
-protected override async Task OnInitializedAsync()
+    
+    
+    protected override async Task OnInitializedAsync()
 {
 await LoadTransactions();
 await LoadDebts(); 
@@ -429,8 +407,6 @@ filteredTransactions = new List<Transaction>(recentTransactions);
 private void ApplyFilters()
 {
     var filtered = recentTransactions;
-
-    // Apply date filters if set
     if (startDate.HasValue)
     {
         filtered = filtered.Where(t => t.Date >= startDate.Value).ToList();
@@ -440,34 +416,28 @@ private void ApplyFilters()
     {
         filtered = filtered.Where(t => t.Date <= endDate.Value).ToList();
     }
-
-    // Apply type filter if set
+    
     if (!string.IsNullOrEmpty(SelectedType))
     {
         filtered = filtered.Where(t => t.Type == SelectedType).ToList();
     }
-
-    // Apply tag filter if set
+    
     if (!string.IsNullOrEmpty(SelectedTag))
     {
         filtered = filtered.Where(t => t.Tags.Contains(SelectedTag)).ToList();
     }
-
-    // Update the recentTransactions directly with the filtered list
-    recentTransactions = filtered;
+    recentTransactions = filtered; // Update the recentTransactions directly with the filtered list
 }
 
-// Clear method to reset search and filters
-private void ClearFilters()
+
+private void ClearFilters()// Clear method to reset search and filters
 {
     searchQuery = ""; // Reset search query
     startDate = null;  // Reset start date filter
     endDate = null;    // Reset end date filter
     SelectedType = ""; // Reset type filter
     SelectedTag = "";  // Reset tag filter
-
-    // Reload all transactions without any filters
-    LoadTransactions();
+    LoadTransactions();// Reload all transactions without any filters
 }
     
     
@@ -508,12 +478,6 @@ private void CloseModal()
 }
 private async Task AddTransaction()
 {
-    // Add the transaction
-    // recentTransactions.Add(new Transaction
-    // {
-    //     Date = newTransaction.Date == default ? DateTime.Now : newTransaction.Date
-    // });
-    //
     try
     {
 
@@ -541,6 +505,7 @@ private async Task AddTransaction()
             errorMessage = "Transaction type is required.";
             return;
         }
+        
         // Calculate total income and expense to determine available balance
         decimal totalIncome = await TransactionService.GetTotalIncomeAsync();
         decimal totalExpense = await TransactionService.GetTotalExpenseAsync();
@@ -560,30 +525,21 @@ private async Task AddTransaction()
 
         }
         
-        // Check if this is a Debt and if it is being marked as 'Paid'
-        if (newTransaction.Type == "Debt" && newTransaction.Status == "Cleared")
+       
+        if (newTransaction.Type == "Debt" && newTransaction.Status == "Cleared")  // Check if this is a Debt and if it is being marked as 'Cleared'
         {
-            // Ensure that the total income is sufficient to clear the debt
-            if (totalBalance >= newTransaction.Amount)
+           
+            if (totalBalance >= newTransaction.Amount)  // Ensure that the total income is sufficient to clear the debt
             {
                 // Reduce the income by the amount of debt cleared
                 totalIncome -= newTransaction.Amount;
-               
-                // or log the new total income as needed
                 Console.WriteLine($"Income reduced by {newTransaction.Amount}. New total income: {totalIncome}");
-
-                // Optionally, update the database with the reduced income, if needed
-                // Example: await IncomeService.UpdateTotalIncomeAsync(totalIncome);
-                
-                // Remove the debt from the pending debts list
-                pendingDebts.RemoveAll(d => d.Title == newTransaction.Title && d.Amount == newTransaction.Amount);
-
+                pendingDebts.RemoveAll(d => d.Title == newTransaction.Title && d.Amount == newTransaction.Amount);// Remove the debt from the pending debts list
                 Console.WriteLine("Debt cleared and income updated.");
             }
             else
             {
-                // If the balance is insufficient to clear the debt, show an error message
-                errorMessage = "Insufficient balance to clear the debt.";
+                errorMessage = "Insufficient balance to clear the debt.";  // If the balance is insufficient to clear the debt, show an error message
                 Console.WriteLine(errorMessage);
                 return;
             }
@@ -634,31 +590,15 @@ private async Task AddTransaction()
     }
     catch (Exception ex)
     {
-        // Log the error (if logging is set up) or display an error message
         Console.WriteLine($"Error adding transaction: {ex.Message}");
         errorMessage = $"An unexpected error occurred: {ex.Message}";
-        // Optionally, display an error message to the user using a notification mechanism
     }
 
     {
-        // Ensure the modal is always closed, even in case of exceptions
         CloseModal();
         
         newTransaction = new(); // Reset form
     }
-
-
-
-
-    
-    
-
-    // await TransactionService.SaveTransactionAsync(newTransaction);
-    // newTransaction = new Transaction();
-    // Console.WriteLine("Transaction added successfully.");
-    // await LoadTransactions();
-    // await LoadDebts(); // Refresh the debts list after adding
-    // CloseModal();
 } 
 
 private void ClearErrorMessage()
@@ -674,67 +614,6 @@ private void ResetForm()
         Type = string.Empty
     };
 }
-// private async Task ClearDebt(Transaction debt)
-// {
-//     if (debt.Status == "Pending")
-//     {
-//         debt.Status = "Cleared";
-//         await TransactionService.UpdateTransactionAsync(debt);
-//
-//         // Update the list and reload debts
-//         await LoadDebts();
-//     }
-// }
-
-// private void SearchTransactions()
-// {
-//     // Filter the transactions based on the title matching the search query
-//     if (string.IsNullOrWhiteSpace(searchQuery))
-//     {
-//         filteredTransactions = recentTransactions;
-//     }
-//     else
-//     {
-//         filteredTransactions = recentTransactions
-//             .Where(t => t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
-//             .ToList();
-//     }
-// }
-// { 
-//     await TransactionService.SaveTransactionAsync(newTransaction);
-// if (newTransaction.Type == "Debt")
-// {
-//     // Create a new debt entry
-//     var newDebt = new Transaction
-//     {
-//         Title = newTransaction.Title,
-//         Date = newTransaction.Date,
-//         DueDate = newTransaction.Date.AddMonths(1),  // Set due date to 1 month from the transaction date
-//         Amount = newTransaction.Amount,
-//         Tags = newTransaction.Tags,
-//         Status = newTransaction.Status,
-//         Source = newTransaction.Notes // Assuming Notes are the source of the debt
-//     };
-//
-//     // Add the new debt to the pending debts list
-//     pendingDebts.Add(newDebt);
-// }
-// newTransaction = new Transaction { Date = DateTime.Now };
-// await LoadTransactions();
-// await LoadDebts();
-// CloseModal();
-// }
-
-//     private async Task LoadDebts()
-//     {
-//         var allDebts = await TransactionService.GetTransactionsAsync();
-//         pendingDebts = allDebts.Where(d => d.Type == "Debt").ToList();
-// //     foreach (var debt in pendingDebts)
-// //     {
-// //         Console.WriteLine($"ID: {debt.Id}, Status: {debt.Status}");
-// //     }
-// // }
-//     }
 
 
     private void EditTransaction(Transaction transaction)
@@ -766,22 +645,17 @@ public void EditDebt(Transaction debt)
 
 public void SaveEditDebt(Transaction debt)
 {
-    
-    // Logic to save the edited debt
-    debt.IsEditing = true;
+    debt.IsEditing = true;     // Logic to save the edited debt
 }
 
 public void CancelEditDebt(Transaction debt)
 {
-    
-    // Logic to revert the changes made during editing
-    debt.IsEditing = false;
+    debt.IsEditing = false;  // Logic to revert the changes made during editing
 }
 
 public void DeleteDebt(Transaction debt)
 {
-    // Logic to delete the debt
-    pendingDebts.Remove(debt);
+    pendingDebts.Remove(debt);  // Logic to delete the debt
 }
 
 private void ToggleSort()
@@ -829,366 +703,4 @@ private void SortTransactionsByAmount()
     // Sort transactions by Date in descending order
     recentTransactions = recentTransactions.OrderByDescending(t => t.Amount).ToList();
 }
-
-
-
-
 }
-
-
-@* @page "/transaction" *@
-@* *@
-@* @using Expense_Tracker.Model; *@
-@* @using Expense_Tracker.Services; *@
-@* @inject ITransactionService TransactionService *@
-@* @inject NavigationManager NavigationManager *@
-@* *@
-@* <!-- Transaction Highlight Section --> *@
-@* <div class="card shadow-sm mb-4"> *@
-@*     <div class="card-body"> *@
-@*         <h5 class="card-title text-uppercase fw-bold">Transaction List</h5> *@
-@*         <div class="table-responsive"> *@
-@*             <table class="table table-bordered align-middle"> *@
-@*                 <thead class="table-light"> *@
-@*                 <tr> *@
-@*                     <th>Title</th> *@
-@*                     <th>Amount</th> *@
-@*                     <th>Date</th> *@
-@*                     <th>Tags</th> *@
-@*                     <th>Type</th> *@
-@*                     <th>Notes</th> *@
-@* *@
-@*                 </tr> *@
-@*                 </thead> *@
-@*                 <tbody> *@
-@* *@
-@*                 $1$ <div class="transaction-list"> #1# *@
-@*                 @foreach (var transaction in recentTransactions) *@
-@*                 { *@
-@*                 <tr> *@
-@*                     <td>@transaction.Title</td> *@
-@*                     <td>@transaction.Amount</td> *@
-@*                     <td>@transaction.Date.ToString("yyyy-MM-dd")</td> *@
-@*                     <td>@transaction.Tags</td> *@
-@*                     <td class="@(transaction.Type == "Income" ? "text-success" : transaction.Type == "Expense" ? "text-danger" : "text-warning")">@transaction.Type</td> *@
-@*                     <td>@transaction.Notes</td> *@
-@*                 </tr> *@
-@*                *@
-@*                 } *@
-@*                 </tbody> *@
-@*             </table> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-@*            *@
-@*             <div  class="card shadow-sm"> *@
-@*                 <div class="card-body"> *@
-@*                     <h5 class="card-title text-uppercase fw-bold">Pending Debts</h5> *@
-@*                     <div class="table-responsive"> *@
-@*                         <table class="table table-bordered align-middle"> *@
-@*                             <thead class="table-light"> *@
-@*                             <tr> *@
-@*                                 <th>Title</th> *@
-@*                                 <th>Added Date</th> *@
-@*                                 <th>Due Date</th> *@
-@*                                 <th>Amount</th> *@
-@*                                 <th>Tags</th> *@
-@*                                 <th>Status</th> *@
-@*                                 <th>Source</th> *@
-@*                             </tr> *@
-@*                             </thead> *@
-@*                             <tbody> *@
-@*                             <tr> *@
-@*                                 @foreach (var debt in pendingDebts) *@
-@*                                 { *@
-@*                                     <tr> *@
-@*                                         <td>@debt.Title</td> *@
-@*                                         <td>@debt.Date.ToString("yyyy-MM-dd")</td> *@
-@*                                         <td>@debt.DueDate.ToString("yyyy-MM-dd")</td> *@
-@*                                         <td>@debt.Amount</td> *@
-@*                                         <td>@debt.Tags</td> *@
-@*                                 <td> *@
-@*                                     @if (string.IsNullOrEmpty(debt.Status)) *@
-@*                                     { *@
-@*                                     <span class="badge bg-secondary">Unknown</span> *@
-@*                                     } *@
-@*                                     else if (debt.Status == "Pending") *@
-@*                                     { *@
-@*                                     <span class="badge bg-warning text-dark">Pending</span> *@
-@*                                     } *@
-@*                                     else if (debt.Status == "Cleared") *@
-@*                                     { *@
-@*                                     <span class="badge bg-success">Cleared</span> *@
-@*                                     } *@
-@*                                 </td> *@
-@*                                  *@
-@*                                  *@
-@*                                 <td>@debt.Source</td> *@
-@*                                  *@
-@*                                     </tr> *@
-@*                                  *@
-@*                                 } *@
-@* *@
-@*                             </tr> *@
-@*                             </tbody> *@
-@*                         </table> *@
-@*                     </div> *@
-@*                 </div> *@
-@*             </div> *@
-@*          *@
-@* $1$ Modal for Adding Transaction #1# *@
-@* @if (showModal) *@
-@* { *@
-@* <div class="modal fade show d-block" tabindex="-1" role="dialog"> *@
-@*     <div class="modal-dialog "  role="document"> *@
-@*         <div class="modal-content"> *@
-@*             <div class="modal-header"> *@
-@*                 <h5 class="modal-title">Add Transaction</h5> *@
-@*                 <button type="button" class="btn-close" @onclick="CloseModal"></button> *@
-@*             </div> *@
-@*             <div class="modal-body"> *@
-@*                 <div class="mb-3"> *@
-@*                     <label>Title</label> *@
-@*                     <input type="text" class="form-control" @bind="newTransaction.Title" /> *@
-@*                 </div> *@
-@*                 <div class="mb-3"> *@
-@*                     <label>Amount</label> *@
-@*                     <input type="number" class="form-control" @bind="newTransaction.Amount" /> *@
-@*                 </div> *@
-@*                 <div class="mb-3"> *@
-@*                     <label>Date</label> *@
-@*                     <input type="date" class="form-control" @bind="newTransaction.Date" /> *@
-@*                 </div> *@
-@*                  *@
-@*                 <div class="mb-3"> *@
-@*                     <label>Tags</label> *@
-@*                     <input type="text" class="form-control" @bind="newTransaction.Tags" /> *@
-@*                 </div> *@
-@*                  *@
-@*                 <div class="mb-3"> *@
-@*                     <label>Notes</label> *@
-@*                     <input type="text" class="form-control" @bind="newTransaction.Notes" /> *@
-@*                 </div> *@
-@*                 <div class="mb-3"> *@
-@*                     <label>Type</label> *@
-@*                     <select class="form-control" @bind="newTransaction.Type"> *@
-@*                         <option value="">Select Type</option> *@
-@*                         <option value="Income">Income</option> *@
-@*                         <option value="Expense">Expense</option> *@
-@*                         <option value="Debt">Debt</option> *@
-@*                     </select> *@
-@*                 </div> *@
-@*                 <div class="mb-3" style="display: @(newTransaction.Type == "Debt" ? "block" : "none")"> *@
-@*                     <label>Status</label> *@
-@*                     <select class="form-control" @bind="newTransaction.Status"> *@
-@*                         <option value="Pending">Pending</option> *@
-@*                         <option value="Cleared">Cleared</option> *@
-@*                     </select> *@
-@*                 </div> *@
-@*             </div> *@
-@*             <div class="modal-footer"> *@
-@*                 <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button> *@
-@*                 <button type="button" class="btn btn-primary" @onclick="AddTransaction">Add</button> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-@* } *@
-@* @code { *@
-@* private List<Transaction> recentTransactions = new(); *@
-@* private List<Transaction> pendingDebts = new(); *@
-@* private decimal totalIncome; *@
-@* private decimal totalExpense; *@
-@* private decimal totalDebt; *@
-@* private decimal pendingDebt; *@
-@* private decimal clearedDebt; *@
-@* private decimal totalBalance; *@
-@* *@
-@* private bool showModal = false; *@
-@* private Transaction newTransaction = new(); *@
-@* private string searchQuery = ""; *@
-@* *@
-@* protected override async Task OnInitializedAsync() *@
-@* { *@
-@* await LoadTransactions(); *@
-@* } *@
-@* *@
-@* private async Task LoadTransactions() *@
-@* { *@
-@* recentTransactions = await TransactionService.GetTransactionsAsync(); *@
-@* totalIncome = await TransactionService.GetTotalIncomeAsync(); *@
-@* totalExpense = await TransactionService.GetTotalExpenseAsync(); *@
-@* totalDebt = await TransactionService.GetTotalDebtAsync(); *@
-@* pendingDebt = await TransactionService.GetPendingDebtAsync(); *@
-@* clearedDebt = await TransactionService.GetClearedDebtAsync(); *@
-@* *@
-@* totalBalance = totalIncome - totalExpense - pendingDebt; *@
-@* pendingDebts = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").ToList(); *@
-@* } *@
-@* *@
-@* private async Task AddTransaction() *@
-@* { *@
-@* await TransactionService.SaveTransactionAsync(newTransaction); *@
-@* newTransaction = new Transaction(); *@
-@* await LoadTransactions(); *@
-@* CloseModal(); *@
-@* } *@
-@* *@
-@* private void OpenModal() *@
-@* { *@
-@* showModal = true; *@
-@* } *@
-@* *@
-@* private void CloseModal() *@
-@* { *@
-@* showModal = false; *@
-@* } *@
-@* *@
-@* private void ToggleSort() *@
-@* { *@
-@* recentTransactions = recentTransactions.OrderBy(t => t.Date).ToList(); *@
-@* } *@
-@* *@
-@* private void ToggleSortAmount() *@
-@* { *@
-@* recentTransactions = recentTransactions.OrderBy(t => t.Amount).ToList(); *@
-@* } *@
-@* } *@
-@* *@
-
-
-
-@* @code{ *@
-@* private List<Transaction> recentTransactions = new List<Transaction>(); *@
-@* private Transaction newTransaction = new Transaction(); *@
-@* private bool showModal = false; *@
-@* private List<Transaction> pendingDebts = new List<Transaction>(); *@
-@* *@
-@* *@
-@* private decimal totalIncome = 0; *@
-@* private decimal totalExpense = 0; *@
-@* private decimal totalDebt = 0; *@
-@* private decimal totalBalance = 0; *@
-@* private decimal pendingDebt = 0; *@
-@* private decimal clearedDebt = 0; *@
-@* *@
-@* protected override async Task OnInitializedAsync() *@
-@* { *@
-@* // Fetch the latest 5 transactions *@
-@* recentTransactions = (await TransactionService.GetTransactionsAsync()) *@
-@* .OrderByDescending(t => t.Date) *@
-@* .Take(5) *@
-@* .ToList(); *@
-@* *@
-@* foreach (var transaction in recentTransactions) *@
-@* { *@
-@* Console.WriteLine($"Title: {transaction.Title}, Tags: {transaction.Tags}, Notes: {transaction.Notes}"); *@
-@* } *@
-@* *@
-@* totalIncome = await TransactionService.GetTotalIncomeAsync(); *@
-@* totalExpense = await TransactionService.GetTotalExpenseAsync(); *@
-@* totalDebt = await TransactionService.GetTotalDebtAsync(); *@
-@* pendingDebt = await TransactionService.GetPendingDebtAsync(); *@
-@* clearedDebt = await TransactionService.GetClearedDebtAsync(); *@
-@* totalBalance = totalIncome - totalExpense + totalDebt; *@
-@* } *@
-@* *@
-@* private void OpenModal() *@
-@* { *@
-@* newTransaction = new Transaction(); // Reset form data *@
-@* newTransaction.Date = DateTime.Now; *@
-@* showModal = true; *@
-@* } *@
-@* *@
-@* private void CloseModal() *@
-@* { *@
-@* showModal = false; *@
-@* } *@
-@* *@
-@* private async Task  AddTransaction() *@
-@* { *@
-@* try *@
-@* { *@
-@* // Validate the new transaction *@
-@* if (newTransaction == null) *@
-@* { *@
-@* throw new ArgumentNullException(nameof(newTransaction), "Transaction details cannot be null."); *@
-@* *@
-@* } *@
-@* *@
-@* if (string.IsNullOrWhiteSpace(newTransaction.Title)) *@
-@* { *@
-@* throw new ArgumentException("Title is required.", nameof(newTransaction.Title)); *@
-@* } *@
-@* *@
-@* if (newTransaction.Amount <= 0) *@
-@* { *@
-@* throw new ArgumentException("Amount must be greater than zero.", nameof(newTransaction.Amount)); *@
-@* } *@
-@* *@
-@* if (string.IsNullOrWhiteSpace(newTransaction.Type)) *@
-@* { *@
-@* throw new ArgumentException("Transaction type is required.", nameof(newTransaction.Type)); *@
-@* } *@
-@* *@
-@* // Add the transaction *@
-@* recentTransactions.Add(new Transaction *@
-@* { *@
-@* Title = newTransaction.Title, *@
-@* Date = newTransaction.Date == default ? DateTime.Now : newTransaction.Date, *@
-@* Amount = newTransaction.Amount, *@
-@* Type = newTransaction.Type, *@
-@* Tags = newTransaction.Tags, *@
-@* Notes = newTransaction.Notes, *@
-@* Status = newTransaction.Type == "Debt" ? (newTransaction.Status ?? "Pending") : null // Default to "Pending" for Debt *@
-@* }); *@
-@* Console.WriteLine("Transaction added successfully."); *@
-@* // Check if the transaction is of type 'Debt' *@
-@* *@
-@* if (newTransaction.Type == "Debt") *@
-@* { *@
-@* // Create a new debt entry *@
-@* var newDebt = new Transaction *@
-@* { *@
-@* Title = newTransaction.Title, *@
-@* Date = newTransaction.Date, *@
-@* DueDate = newTransaction.Date.AddMonths(1),  // Set due date to 1 month from the transaction date *@
-@* Amount = newTransaction.Amount, *@
-@* Tags = newTransaction.Tags, *@
-@* Status = newTransaction.Status, *@
-@* Source = newTransaction.Notes // Assuming Notes are the source of the debt *@
-@* }; *@
-@* *@
-@* // Add the new debt to the pending debts list *@
-@* pendingDebts.Add(newDebt); *@
-@* } *@
-@* *@
-@* // Recalculate totals *@
-@* CalculateTotals(); *@
-@* } *@
-@* catch (Exception ex) *@
-@* { *@
-@* // Log the error (if logging is set up) or display an error message *@
-@* Console.WriteLine($"Error adding transaction: {ex.Message}"); *@
-@* // Optionally, display an error message to the user using a notification mechanism *@
-@* } *@
-@* *@
-@* { *@
-@* // Ensure the modal is always closed, even in case of exceptions *@
-@* CloseModal(); *@
-@* } *@
-@* } *@
-@* *@
-@* *@
-@* private void CalculateTotals() *@
-@* { *@
-@* totalIncome = recentTransactions.Where(t => t.Type == "Income").Sum(t => t.Amount); *@
-@* totalExpense = recentTransactions.Where(t => t.Type == "Expense").Sum(t => t.Amount); *@
-@* totalDebt = recentTransactions.Where(t => t.Type == "Debt").Sum(t => t.Amount); *@
-@* pendingDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Pending").Sum(t => t.Amount); *@
-@* clearedDebt = recentTransactions.Where(t => t.Type == "Debt" && t.Status == "Cleared").Sum(t => t.Amount); *@
-@* totalBalance = totalIncome - totalExpense + totalDebt; *@
-@* } *@
-@* *@
-@* *@
-@* } *@

@@ -41,10 +41,9 @@ public class TransactionService : ITransactionService
         return Task.FromResult(transact);
     }
     
-    // Method to get top 5 most recent transactions
-    public Task<List<Transaction>> GetTop5TransactionsAsync()
+    public Task<List<Transaction>> GetTop5TransactionsAsync()  // Method to get top 5 most recent transactions
     {
-        // Get the top 5 transactions ordered by the date in descending order (most recent first)
+        // Get the top 5 transactions ordered by the date in descending order
         var top5Transactions = transact
             .OrderByDescending(t => t.Date)
             .Take(5)
@@ -147,8 +146,7 @@ public class TransactionService : ITransactionService
         return Task.CompletedTask;
     }
     
-    // Implement the search functionality
-    public Task<List<Transaction>> SearchTransactionsByTitleAsync(string title)
+    public Task<List<Transaction>> SearchTransactionsByTitleAsync(string title)  // Implement the search functionality
     {
         var filteredTransactions = transact
             .Where(t => t.Title.Contains(title, StringComparison.OrdinalIgnoreCase))

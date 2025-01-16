@@ -52,9 +52,6 @@
                 errorMessage = "All the details needs to be filled.";
                 return;
             }
-
-            // try
-            // {
                 var Registered = await UserService.UserRegister(newUser);
 
                 if (Registered)
